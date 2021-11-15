@@ -9,11 +9,13 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 
 public class SwerveModule {
@@ -109,5 +111,28 @@ public class SwerveModule {
 
     public double getTurnMotorValue() {
         return turningEncoder.getAbsolutePosition();
+    }
+
+    public void simulationPeriodic(double rate) {
+        //we need to calculate the motor velocities and encoder positions since they aren't real here
+        /*
+        m_turnMotorSim.setInputVoltage(m_turnOutput / ModuleConstants.kMaxModuleAngularSpeedRadiansPerSecond * RobotController.getBatteryVoltage());
+        m_driveMotorSim.setInputVoltage(m_driveOutput / Constants.DriveConstants.kMaxSpeedMetersPerSecond * RobotController.getBatteryVoltage());
+    
+        m_turnMotorSim.update(rate);
+        m_driveMotorSim.update(rate);
+    
+        // Calculate distance traveled using RPM * dt
+        m_simTurnEncoderDistance += m_turnMotorSim.getAngularVelocityRadPerSec() * rate;
+        m_turningEncoderSim.setDistance(m_simTurnEncoderDistance);
+        m_turningEncoderSim.setRate(m_turnMotorSim.getAngularVelocityRadPerSec());
+    
+        m_driveEncoderSim.setRate(m_driveMotorSim.getAngularVelocityRadPerSec());
+        */
+    }
+
+    public void putSmartDashboard(String table) {
+        SmartDashboard.putNumber(table + "/driveEncoderRaw", driveMotor.getSelectedSensorPosition());
+        SmartDashboard.putNumber(table + "/turnEncoderRaw", turningEncoder.getAbsolutePosition());
     }
 }
