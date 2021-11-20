@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.system.plant.DCMotor;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /** Represents a swerve drive style drivetrain. */
@@ -27,41 +28,80 @@ public class Drivetrain extends SubsystemBase {
     public static final double kMaxSpeed = 3.0; // 3 meter(s) per second
     public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
 
-    // locations of the 4 wheel contact points
-    private final Translation2d[] locations = {
-                                       /* X , Y */
-            /* FL */ new Translation2d(-0.381,  0.381), 
-            /* FR */ new Translation2d( 0.381,  0.381),
-            /* RL */ new Translation2d(-0.381, -0.381), 
-            /* RR */ new Translation2d( 0.381, -0.381) };
-
-    private final SwerveModule[] modules = { 
-        /* FL */ new SwerveModule(7, 8, 3), 
-        /* FR */ new SwerveModule(5, 9, 0),
-        /* RL */ new SwerveModule(4, 11, 1), 
-        /* RR */ new SwerveModule(6, 10, 2) 
-    };
-
-    private final String[] moduleNames = {
-        "SwerveDrive_FL",
-        "SwerveDrive_FR",
-        "SwerveDrive_RL",
-        "SwerveDrive_RR"
-    };
-
+    private final SwerveModule[] modules = new SwerveModule[4];
+    private final SwerveConstants[] constants = new SwerveConstants[4]; 
     private Pose2d[] modulePoses = new Pose2d[4];
 
     // private final AnalogGyro gyro = new AnalogGyro(0);
     private final PigeonIMU pigeon = new PigeonIMU(13);
 
-    private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
-        locations[FL], locations[FR], locations[RL], locations[RR]);
+    private final SwerveDriveKinematics kinematics;
 
-    private final SwerveDriveOdometry odometry = new SwerveDriveOdometry(kinematics, getHeading());
+    private final SwerveDriveOdometry odometry;
 
     private Field2d field = new Field2d();
 
     public Drivetrain() {
+        //set defaults for all swerve moules
+        for(int i=0; i<constants.length; i++) {
+            constants[i] = new SwerveConstants();
+            constants[i].TurnMotor = DCMotor.getNeo550(1);
+            constants[i].TurnMotorGearRatio = (12/1) * (64/12); //12:1 on the motor, 5.33 in the swerve
+            constants[i].DriveMotor = DCMotor.getFalcon500(1);
+            constants[i].DriveMotorGearRatio = 5.25;  //12t to 21t gear stage, 15t to 45t bevel gear stage
+
+            constants[i].TurnMotorP = 0;
+            constants[i].TurnMotorI = 0;
+            constants[i].TurnMotorD = 0;
+
+            constants[i].DriveMotorP = 0;
+            constants[i].DriveMotorI = 0;
+            constants[i].DriveMotorD = 0;
+            constants[i].DriveMotorFF = 0;
+            constants[i].DriveMotorIZone = 0;
+
+            //TODO: These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
+            //this should be once for the drivetrain
+            constants[i].DriveMotorKv = 2.3;  //kvVoltSecondsPerMeter
+            constants[i].DriveMotorKa = 0.0917;  //kaVoltSecondsSquaredPerMeter
+            //this should be done per turning motor
+            constants[i].TurnMotorKv = 0.16;  //VoltSecondsPerRadian
+            constants[i].TurnMotorKa = 0.0348;  //VoltSecondsSquaredPerRadian = 0.0348
+        }
+        //per corner constants
+        constants[FL].Name = "SwerveDrive_FL";
+        constants[FL].DriveMotorId = 7;
+        constants[FL].TurnMotorId = 8;
+        constants[FL].CanCoderId = 3;
+        constants[FL].Location = new Translation2d(-0.261, 0.261);
+
+        constants[FR].Name = "SwerveDrive_FR";
+        constants[FR].DriveMotorId = 5;
+        constants[FR].TurnMotorId = 9;
+        constants[FR].CanCoderId = 0;
+        constants[FR].Location = new Translation2d(0.261, 0.261);
+
+        constants[RL].Name = "SwerveDrive_RL";
+        constants[RL].DriveMotorId = 4;
+        constants[RL].TurnMotorId = 11;
+        constants[RL].CanCoderId = 1;
+        constants[RL].Location = new Translation2d(-0.261, -0.261);
+
+        constants[RR].Name = "SwerveDrive_RR";
+        constants[RR].DriveMotorId = 6;
+        constants[RR].TurnMotorId = 10;
+        constants[RR].CanCoderId = 2;
+        constants[RR].Location = new Translation2d(0.261, -0.261);
+
+        //create the swerve modules
+        for(int i=0; i<modules.length; i++) {
+            modules[i] = new SwerveModule(constants[i]);
+        }
+        kinematics = new SwerveDriveKinematics(
+            constants[FL].Location, constants[FR].Location,
+            constants[RL].Location, constants[RR].Location);
+        odometry = new SwerveDriveOdometry(kinematics, getHeading());
+
         // gyro.reset();
         pigeon.clearStickyFaults();
         SmartDashboard.putData("Field", field);
@@ -112,7 +152,7 @@ public class Drivetrain extends SubsystemBase {
         // Update the poses for the swerveModules. Note that the order of rotating the
         // position and then adding the translation matters
         for (int i = 0; i < modules.length; i++) {
-            var modulePositionFromChassis = locations[i].rotateBy(getHeading())
+            var modulePositionFromChassis = constants[i].Location.rotateBy(getHeading())
                     .plus(pose.getTranslation());
 
             // Module's heading is it's angle relative to the chassis heading
@@ -148,7 +188,7 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putNumber("SwerveDrive/gyroAngle", getAngle());
         SmartDashboard.putNumber("SwerveDrive/gyroHeading", getHeading().getDegrees());
         for(int i=0; i< modules.length; i++) {
-            modules[i].putSmartDashboard(moduleNames[i]);
+            modules[i].putSmartDashboard();
         }
     }
 
