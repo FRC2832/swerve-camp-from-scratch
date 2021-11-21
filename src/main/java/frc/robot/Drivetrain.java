@@ -28,7 +28,7 @@ public class Drivetrain extends SubsystemBase {
     public static final int RR = 3;
 
     public static final double kMaxSpeed = 4.85; // per Thirfty Bot, max speed with Falcon 500 is 15.9ft/s, or 4.85 m/s
-    public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
+    public static final double kMaxAngularSpeed = 2 * Math.PI; // 1 rotation per second
 
     private final SwerveModule[] modules = new SwerveModule[4];
     private final SwerveConstants[] constants = new SwerveConstants[4]; 
@@ -50,7 +50,7 @@ public class Drivetrain extends SubsystemBase {
             gyroBase = new ADXRS450_Gyro();
             gyroSim = new ADXRS450_GyroSim(gyroBase);
         }
-        
+
         //set defaults for all swerve moules
         for(int i=0; i<constants.length; i++) {
             constants[i] = new SwerveConstants();
@@ -233,5 +233,16 @@ public class Drivetrain extends SubsystemBase {
         //set the IMU to the calculated robot rotation
         double angle = Math.toDegrees(omega * rate);
         gyroSim.setAngle(odometry.getPoseMeters().getRotation().getDegrees() + angle);
+    }
+
+    public double deadbandStick(double value) {
+        final double deadband = 0.12;
+        double absVal = Math.abs(value);
+
+        if(absVal > deadband) {
+            return Math.signum(value) * (deadband + ((1-deadband) * absVal));
+        } else {
+            return 0;
+        }
     }
 }

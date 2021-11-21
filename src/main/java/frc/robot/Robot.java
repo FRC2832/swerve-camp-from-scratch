@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Commands.DriveStick;
 
@@ -54,5 +55,7 @@ public class Robot extends TimedRobot {
         }
         //save the result for next loop
         lastEnabled = isEnabled();
+
+        SmartDashboard.putData(swerve);
     }
 }
