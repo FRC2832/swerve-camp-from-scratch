@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Commands.AutoDrive;
+import frc.robot.Commands.DriveCharacter;
 import frc.robot.Commands.DriveStick;
 
 public class Robot extends TimedRobot {
@@ -29,11 +30,13 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Stick Drive", new DriveStick(swerve, controller));
         SmartDashboard.putData("Drive Forward 1mps", new AutoDrive(swerve, 1, 0));
         SmartDashboard.putData("Drive FL 1mps", new AutoDrive(swerve, 1, 1));
+        SmartDashboard.putData("DriveCharacter", new DriveCharacter(this, swerve));
     }
 
     @Override
-    public void autonomousPeriodic() {
-        
+    public void autonomousInit() {
+        CommandScheduler.getInstance().cancelAll();
+        //CommandScheduler.getInstance().schedule(new DriveCharacter(this, swerve));
     }
 
     @Override

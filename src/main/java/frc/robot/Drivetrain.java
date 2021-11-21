@@ -200,6 +200,10 @@ public class Drivetrain extends SubsystemBase {
 
     }
 
+    public SwerveModule[] getModules() {
+        return modules;
+    }
+
     @Override
     public void periodic() {
         //put data on dashboard
