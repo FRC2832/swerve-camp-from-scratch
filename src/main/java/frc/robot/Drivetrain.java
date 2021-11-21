@@ -6,6 +6,7 @@ package frc.robot;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
 
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
@@ -13,6 +14,7 @@ import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.simulation.ADXRS450_GyroSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.system.plant.DCMotor;
@@ -25,7 +27,7 @@ public class Drivetrain extends SubsystemBase {
     public static final int RL = 2;
     public static final int RR = 3;
 
-    public static final double kMaxSpeed = 3.0; // 3 meter(s) per second
+    public static final double kMaxSpeed = 4.85; // per Thirfty Bot, max speed with Falcon 500 is 15.9ft/s, or 4.85 m/s
     public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
 
     private final SwerveModule[] modules = new SwerveModule[4];
@@ -34,6 +36,8 @@ public class Drivetrain extends SubsystemBase {
 
     // private final AnalogGyro gyro = new AnalogGyro(0);
     private final PigeonIMU pigeon = new PigeonIMU(13);
+    private ADXRS450_GyroSim gyroSim;
+    private ADXRS450_Gyro gyroBase;
 
     private final SwerveDriveKinematics kinematics;
 
@@ -42,6 +46,11 @@ public class Drivetrain extends SubsystemBase {
     private Field2d field = new Field2d();
 
     public Drivetrain() {
+        if(Robot.isSimulation()) {
+            gyroBase = new ADXRS450_Gyro();
+            gyroSim = new ADXRS450_GyroSim(gyroBase);
+        }
+        
         //set defaults for all swerve moules
         for(int i=0; i<constants.length; i++) {
             constants[i] = new SwerveConstants();
@@ -62,10 +71,10 @@ public class Drivetrain extends SubsystemBase {
 
             //TODO: These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
             //this should be once for the drivetrain
-            constants[i].DriveMotorKv = 2.3;  //kvVoltSecondsPerMeter
+            constants[i].DriveMotorKv = 2.474;  //kvVoltSecondsPerMeter (default = 12/kMaxSpeed)
             constants[i].DriveMotorKa = 0.0917;  //kaVoltSecondsSquaredPerMeter
             //this should be done per turning motor
-            constants[i].TurnMotorKv = 0.16;  //VoltSecondsPerRadian
+            constants[i].TurnMotorKv = 0.6095;  //VoltSecondsPerRadian (default = 12/19.686 (188RPM = 19.686Rad/S))
             constants[i].TurnMotorKa = 0.0348;  //VoltSecondsSquaredPerRadian = 0.0348
         }
         //per corner constants
@@ -101,10 +110,14 @@ public class Drivetrain extends SubsystemBase {
             constants[FL].Location, constants[FR].Location,
             constants[RL].Location, constants[RR].Location);
         odometry = new SwerveDriveOdometry(kinematics, getHeading());
+        
+        //set the robot to x=0.5m, y=4m, rot=0*
+        odometry.resetPosition(new Pose2d(0.5, 4, new Rotation2d()), new Rotation2d());
 
         // gyro.reset();
         pigeon.clearStickyFaults();
         SmartDashboard.putData("Field", field);
+        SmartDashboard.putBoolean("Reset Position", false);
     }
 
     /**
@@ -179,7 +192,12 @@ public class Drivetrain extends SubsystemBase {
      * @return Robot's angle since powerup
      */
     public double getAngle() {
-        return pigeon.getCompassHeading();
+        if(Robot.isReal()) {
+            return pigeon.getCompassHeading();
+        } else {
+            return gyroBase.getAngle();
+        }
+
     }
 
     @Override
@@ -194,6 +212,13 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
+        boolean reset = SmartDashboard.getBoolean("Reset Position", false);
+        if(reset == true) {
+            //set the robot to x=0.5m, y=4m, rot=0*
+            odometry.resetPosition(new Pose2d(0.5, 4, new Rotation2d()), new Rotation2d());
+            SmartDashboard.putBoolean("Reset Position", false);
+        }
+
         double rate = Robot.kDefaultPeriod;
         SwerveModuleState[] states = new SwerveModuleState[4];
 
@@ -206,6 +231,7 @@ public class Drivetrain extends SubsystemBase {
         //calculate the robot's speed and angle (we only care about angle here)
         double omega = kinematics.toChassisSpeeds(states).omegaRadiansPerSecond;
         //set the IMU to the calculated robot rotation
-        pigeon.addYaw(Math.toDegrees(omega) * rate);
+        double angle = Math.toDegrees(omega * rate);
+        gyroSim.setAngle(odometry.getPoseMeters().getRotation().getDegrees() + angle);
     }
 }
