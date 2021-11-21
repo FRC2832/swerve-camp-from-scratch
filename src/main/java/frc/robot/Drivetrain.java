@@ -124,7 +124,7 @@ public class Drivetrain extends SubsystemBase {
      * Method to drive the robot using joystick info.
      *
      * @param xSpeed        Speed of the robot in the x direction (forward).
-     * @param ySpeed        Speed of the robot in the y direction (sideways).
+     * @param ySpeed        Speed of the robot in the y direction (sideways). Left is positive.
      * @param rot           Angular rate of the robot.
      * @param fieldRelative Whether the provided x and y speeds are relative to the
      *                      field.

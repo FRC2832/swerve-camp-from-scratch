@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Commands.AutoDrive;
 import frc.robot.Commands.DriveStick;
 
 public class Robot extends TimedRobot {
@@ -23,6 +24,11 @@ public class Robot extends TimedRobot {
         swerve.setDefaultCommand(new DriveStick(swerve,controller));
         this.setNetworkTablesFlushEnabled(true);
         LiveWindow.setEnabled(false);
+
+        //add commands to the dashboard so we can run them seperately
+        SmartDashboard.putData("Stick Drive", new DriveStick(swerve, controller));
+        SmartDashboard.putData("Drive Forward 1mps", new AutoDrive(swerve, 1, 0));
+        SmartDashboard.putData("Drive FL 1mps", new AutoDrive(swerve, 1, 1));
     }
 
     @Override
