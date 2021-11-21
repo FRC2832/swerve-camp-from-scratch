@@ -9,7 +9,8 @@ public class SwerveConstants {
     public int TurnMotorId;
     public int CanCoderId;
     public Translation2d Location;
-
+    public double ZeroAngle;
+    
     public DCMotor TurnMotor;
     public double  TurnMotorGearRatio;
     public double  TurnMotorKv;

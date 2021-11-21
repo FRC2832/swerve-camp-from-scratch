@@ -27,7 +27,7 @@ public class Drivetrain extends SubsystemBase {
     public static final int RL = 2;
     public static final int RR = 3;
 
-    public static final double kMaxSpeed = 4.85; // per Thirfty Bot, max speed with Falcon 500 is 15.9ft/s, or 4.85 m/s
+    public static final double kMaxSpeed = 2.85; // per Thirfty Bot, max speed with Falcon 500 is 15.9ft/s, or 4.85 m/s
     public static final double kMaxAngularSpeed = 2 * Math.PI; // 1 rotation per second
 
     private final SwerveModule[] modules = new SwerveModule[4];
@@ -82,25 +82,29 @@ public class Drivetrain extends SubsystemBase {
         constants[FL].DriveMotorId = 7;
         constants[FL].TurnMotorId = 8;
         constants[FL].CanCoderId = 3;
-        constants[FL].Location = new Translation2d(-0.261, 0.261);
+        constants[FL].Location = new Translation2d(0.261, 0.261);
+        constants[FL].ZeroAngle = -6.1;
 
         constants[FR].Name = "SwerveDrive_FR";
         constants[FR].DriveMotorId = 5;
         constants[FR].TurnMotorId = 9;
         constants[FR].CanCoderId = 0;
-        constants[FR].Location = new Translation2d(0.261, 0.261);
+        constants[FR].Location = new Translation2d(0.261, -0.261);
+        constants[FR].ZeroAngle = -11.52;
 
         constants[RL].Name = "SwerveDrive_RL";
         constants[RL].DriveMotorId = 4;
         constants[RL].TurnMotorId = 11;
         constants[RL].CanCoderId = 1;
-        constants[RL].Location = new Translation2d(-0.261, -0.261);
+        constants[RL].Location = new Translation2d(-0.261, 0.261);
+        constants[RL].ZeroAngle = 25.2;  
 
         constants[RR].Name = "SwerveDrive_RR";
         constants[RR].DriveMotorId = 6;
         constants[RR].TurnMotorId = 10;
         constants[RR].CanCoderId = 2;
-        constants[RR].Location = new Translation2d(0.261, -0.261);
+        constants[RR].Location = new Translation2d(-0.261, -0.261);
+        constants[RR].ZeroAngle = -153.1;
 
         //create the swerve modules
         for(int i=0; i<modules.length; i++) {
@@ -120,11 +124,14 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putBoolean("Reset Position", false);
     }
 
+    public void resetRobot() {
+        odometry.resetPosition(new Pose2d(0.5, 4, new Rotation2d()), getHeading());
+    }
     /**
      * Method to drive the robot using joystick info.
      *
      * @param xSpeed        Speed of the robot in the x direction (forward).
-     * @param ySpeed        Speed of the robot in the y direction (sideways). Left is positive.
+     * @param ySpeed        Speed of the robot in the y direction (sideways).
      * @param rot           Angular rate of the robot.
      * @param fieldRelative Whether the provided x and y speeds are relative to the
      *                      field.
@@ -193,11 +200,12 @@ public class Drivetrain extends SubsystemBase {
      */
     public double getAngle() {
         if(Robot.isReal()) {
-            return pigeon.getCompassHeading();
+            double[] ypr_deg = new double[3];
+            pigeon.getYawPitchRoll(ypr_deg);
+            return ypr_deg[0];
         } else {
             return gyroBase.getAngle();
         }
-
     }
 
     public SwerveModule[] getModules() {
@@ -244,7 +252,7 @@ public class Drivetrain extends SubsystemBase {
         double absVal = Math.abs(value);
 
         if(absVal > deadband) {
-            return Math.signum(value) * (deadband + ((1-deadband) * absVal));
+            return Math.signum(value) * (deadband + ((1-deadband) * absVal * absVal));
         } else {
             return 0;
         }

@@ -28,11 +28,16 @@ public class Robot extends TimedRobot {
 
         //add commands to the dashboard so we can run them seperately
         SmartDashboard.putData("Stick Drive", new DriveStick(swerve, controller));
-        SmartDashboard.putData("Drive Forward 1mps", new AutoDrive(swerve, 1, 0));
-        SmartDashboard.putData("Drive FL 1mps", new AutoDrive(swerve, 1, 1));
+        SmartDashboard.putData("Drive Forward 1mps", new AutoDrive(swerve, 0.5, 0));
+        SmartDashboard.putData("Drive FL 1mps", new AutoDrive(swerve, 0.5, 0.5));
         SmartDashboard.putData("DriveCharacter", new DriveCharacter(this, swerve));
     }
 
+    @Override
+    public void disabledInit() {
+        swerve.resetRobot();
+    }
+    
     @Override
     public void autonomousInit() {
         CommandScheduler.getInstance().cancelAll();

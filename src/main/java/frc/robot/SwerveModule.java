@@ -7,6 +7,7 @@ package frc.robot;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
@@ -41,8 +42,9 @@ public class SwerveModule {
     private final CANCoder absEncoder;
     private final CANEncoder turningEncoder;
     //private double turnMotorAngle;
+    private final double DriveScaleFactor = 44836;
 
-    private final PIDController drivePIDController = new PIDController(1.0, 0.0, 0.0);
+    private final PIDController drivePIDController = new PIDController(0.5, 0.0, 0.0);
 
     //private final ProfiledPIDController turningPIDController = new ProfiledPIDController(5.0, 0.0, 0.0,
     //        new TrapezoidProfile.Constraints(kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration));
@@ -73,10 +75,9 @@ public class SwerveModule {
         driveMotor = new WPI_TalonFX(constants.DriveMotorId);
         turningMotor = new CANSparkMax(constants.TurnMotorId, MotorType.kBrushless);
         turningEncoder = turningMotor.getEncoder();
-        /* TODO: Turn on brake mode for motors
+        turningEncoder.setPositionConversionFactor(6.82);
         driveMotor.setNeutralMode(NeutralMode.Brake);
         turningMotor.setIdleMode(IdleMode.kBrake);
-        */
 
         /* TODO: Turn on hardware PID control 
         var encoder = turningMotor.getEncoder();
@@ -92,8 +93,9 @@ public class SwerveModule {
         pidController.setOutputRange(min, max);
         */
 
-        absEncoder = new CANCoder(constants.TurnMotorId);
+        absEncoder = new CANCoder(constants.CanCoderId);
         absEncoder.setPositionToAbsolute();
+        absEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Signed_PlusMinus180, 0);
         // Limit the PID Controller's input range between -pi and pi and set the input
         // to be continuous.
         turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
@@ -135,7 +137,7 @@ public class SwerveModule {
 
     public double getVelocity() {
         if(Robot.isReal()) {
-            return driveMotor.getSelectedSensorVelocity();
+            return driveMotor.getSelectedSensorVelocity() / DriveScaleFactor;
         }
         else {
             return driveEncoderSim.getRate();
@@ -144,7 +146,7 @@ public class SwerveModule {
 
     public double getDistance() {
         if(Robot.isReal()) {
-            return driveMotor.getSelectedSensorPosition();
+            return driveMotor.getSelectedSensorPosition() / DriveScaleFactor;
         }
         else {
             return driveEncoderSim.getDistance();
@@ -153,11 +155,13 @@ public class SwerveModule {
 
     public double getAbsoluteAngle() {
         if(Robot.isReal()) {
-            return absEncoder.getAbsolutePosition();
+            return -absEncoder.getAbsolutePosition() + constants.ZeroAngle;
         } else {
             return turnEncoderSim.getDistance();
         }
     }
+
+    
 
     public Rotation2d getRotation() {
         return new Rotation2d(Math.toRadians(getAbsoluteAngle()));
@@ -178,7 +182,7 @@ public class SwerveModule {
         // Calculate the turning motor output from the turning PID controller.
         final double turnOutput = turningPIDController.calculate(Math.toRadians(getAbsoluteAngle()), state.angle.getRadians());
 
-        turnVoltCommand = turnOutput;
+        turnVoltCommand = -turnOutput;
         driveVoltCommand = driveOutput + driveFeedforward;
 
         driveMotor.setVoltage(driveVoltCommand);
@@ -217,7 +221,8 @@ public class SwerveModule {
     public void putSmartDashboard() {
         SmartDashboard.putNumber(constants.Name + "/driveEncoderRaw", getDistance());
         SmartDashboard.putNumber(constants.Name + "/driveVelocity", getVelocity());
-        SmartDashboard.putNumber(constants.Name + "/absEncoderRaw", getAbsoluteAngle());
+        SmartDashboard.putNumber(constants.Name + "/absEncoderZeroed", getAbsoluteAngle());
+        SmartDashboard.putNumber(constants.Name + "/absEncoderRaw", absEncoder.getAbsolutePosition());
         SmartDashboard.putNumber(constants.Name + "/turnEncoderRaw", turningEncoder.getPosition());
     }
 }
