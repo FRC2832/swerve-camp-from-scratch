@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Commands.AutoDrive;
 import frc.robot.Commands.DriveCharacter;
 import frc.robot.Commands.DriveStick;
+import frc.robot.Commands.DriveStickSlew;
 
 public class Robot extends TimedRobot {
     private final XboxController controller = new XboxController(0);
@@ -22,7 +23,7 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         CommandScheduler.getInstance().registerSubsystem(swerve);
-        swerve.setDefaultCommand(new DriveStick(swerve,controller));
+        swerve.setDefaultCommand(new DriveStickSlew(swerve,controller));
         this.setNetworkTablesFlushEnabled(true);
         LiveWindow.setEnabled(false);
 

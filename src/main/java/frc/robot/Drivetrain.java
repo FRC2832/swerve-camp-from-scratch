@@ -90,7 +90,7 @@ public class Drivetrain extends SubsystemBase {
         constants[FR].TurnMotorId = 9;
         constants[FR].CanCoderId = 0;
         constants[FR].Location = new Translation2d(0.261, -0.261);
-        constants[FR].ZeroAngle = -11.52;
+        constants[FR].ZeroAngle = 47.9;
 
         constants[RL].Name = "SwerveDrive_RL";
         constants[RL].DriveMotorId = 4;
