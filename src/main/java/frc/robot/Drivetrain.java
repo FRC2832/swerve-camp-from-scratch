@@ -124,9 +124,13 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putBoolean("Reset Position", false);
     }
 
+    /**
+     * Reset the orientation of the robot (and in simulation, also the position)
+     */
     public void resetRobot() {
-        odometry.resetPosition(new Pose2d(0.5, 4, new Rotation2d()), getHeading());
+        odometry.resetPosition(new Pose2d(0.5, 4, getHeading()), getHeading());
     }
+
     /**
      * Method to drive the robot using joystick info.
      *

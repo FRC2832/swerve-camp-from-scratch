@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Commands.AutoDrive;
 import frc.robot.Commands.DriveStick;
 import frc.robot.Commands.DriveStickSlew;
+import frc.robot.Commands.ResetOrientation;
 
 public class Robot extends TimedRobot {
     private final XboxController controller = new XboxController(0);
@@ -30,7 +31,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Stick Drive", new DriveStick(swerve, controller));
         SmartDashboard.putData("Drive Forward 0.5mps", new AutoDrive(swerve, 0.5, 0));
         SmartDashboard.putData("Drive FR 0.5mps", new AutoDrive(swerve, 0.5, 0.5));
-        //SmartDashboard.putData("DriveCharacter", new DriveCharacter(this, swerve));
+        SmartDashboard.putData("Reset Orientation", new ResetOrientation(swerve));
     }
 
     @Override
