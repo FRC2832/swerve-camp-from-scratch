@@ -22,20 +22,20 @@ public class DriveStick extends CommandBase {
     public void execute() {
         // Get the x speed. We are inverting this because Xbox controllers return
         // negative values when we push forward.
-        double xSpeed = -drive.deadbandStick(controller.getY(GenericHID.Hand.kLeft))
+        double xSpeed = -drive.deadbandStick(controller.getLeftY())
                 * frc.robot.Drivetrain.kMaxSpeed;
 
         // Get the y speed or sideways/strafe speed. We are inverting this because
         // we want a positive value when we pull to the left. Xbox controllers
         // return positive values when you pull to the right by default.
-        double ySpeed = -drive.deadbandStick(controller.getX(GenericHID.Hand.kLeft))
+        double ySpeed = -drive.deadbandStick(controller.getLeftX())
                 * frc.robot.Drivetrain.kMaxSpeed;
 
         // Get the rate of angular rotation. We are inverting this because we want a
         // positive value when we pull to the left (remember, CCW is positive in
         // mathematics). Xbox controllers return positive values when you pull to
         // the right by default.
-        double rot = -drive.deadbandStick(controller.getX(GenericHID.Hand.kRight))
+        double rot = -drive.deadbandStick(controller.getRightX())
                 * frc.robot.Drivetrain.kMaxAngularSpeed;
 
         // ask the drivetrain to run
